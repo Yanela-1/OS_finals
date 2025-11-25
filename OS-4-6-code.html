@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Reviewer</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Smooth transitions */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Option styling */
+        .option-btn { transition: all 0.2s; }
+        .option-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 h-screen overflow-hidden">
+
+    <div id="app" class="h-full flex flex-col">
+        <!-- App content will be injected here by JavaScript -->
+    </div>
+
+    <script>
+        // --- DATA BANK ---
+        const RAW_QUESTIONS = [
+            // FORMATIVE 6: INFORMATION SECURITY
+            { question: "\"Recovery of essential and full services after attack\" is described as:", options: ["Strategies for limiting damage", "Strategies for repelling attacks", "Strategies to identify the attack", "Strategies for restoring system functionalities"], correct: "Strategies for restoring system functionalities", module: "InfoSec" },
+            { question: "Which of the given is an example strategy of the key property \"Recover of essential and full services after attack\"?", options: ["Integrity checking", "Encryption", "Contingency planning", "Access controls"], correct: "Contingency planning", module: "InfoSec" },
+            { question: "Which of the following is an example strategy of the key property \"Adaptation and evolution to reduce effectiveness of future attacks\"?", options: ["Intrusion recognition patterns", "Contingency planning", "Attack recognition patterns", "Encryption"], correct: "Intrusion recognition patterns", module: "InfoSec" },
+            { question: "Which of the following example strategies does not belong to the key property \"Resistance to attacks\"?", options: ["Authentication", "Access controls", "Intrusion detection", "Encryption"], correct: "Intrusion detection", module: "InfoSec" },
+            { question: "What is the \"Relative risk\" of a single computer without e-mail or internet?", options: ["None of these", "Low", "High", "Medium"], correct: "Low", module: "InfoSec" },
+            { question: "Which among the given is a vulnerability of a LAN connected without internet?", options: ["FTP", "Email", "Web Servers", "Sniffers"], correct: "Sniffers", module: "InfoSec" },
+            { question: "\"Sniffers\" is a vulnerability of a LAN connected (with internet).", options: ["True", "False"], correct: "True", module: "InfoSec" },
+            { question: "Computer \"Virus\" is a vulnerability of Single Computer (without E-mail or internet).", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "Which of the following is an example of an intentional attack?", options: ["Blended Threats", "Trojan Horses", "Viruses and worms", "All of these"], correct: "All of these", module: "InfoSec" },
+            { question: "Unauthorized user monitors or modifies a user's transmission.", options: ["Trap doors", "Denial of Service (DoS) attack", "Wire tapping", "Browsing"], correct: "Wire tapping", module: "InfoSec" },
+            { question: "Small programs written to alter the way a computer operates, without permission of the user.", options: ["Encryption", "Virus", "Integrity checking", "Anti-virus"], correct: "Virus", module: "InfoSec" },
+            { question: "A type of virus which is triggered by a certain event like keystroke", options: ["Time bomb", "Key bomb", "Logic Bomb", "Trojan virus"], correct: "Logic Bomb", module: "InfoSec" },
+            { question: "Which of the given is not an example of unintentional attack?", options: ["Wiretapping", "Phishing", "Trojan horse", "All of these"], correct: "All of these", module: "InfoSec" },
+            { question: "Worm is an example of Blended Threat.", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "Hoax site is an example of spoofing", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "Blended threats are considered as intentional attacks.", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "The more complex and powerful the ________, the more likely it is to have vulnerabilities to attack.", options: ["Operating System", "Application software", "BIOS", "Anti-virus"], correct: "Operating System", module: "InfoSec" },
+            { question: "Which of the given is an example strategy of the key property \"Resistance to attacks\"?", options: ["Contingency planning", "Intrusion recognition patterns", "Authentication", "Intrusion detecting"], correct: "Authentication", module: "InfoSec" },
+            { question: "Written policies and procedures and user training are essential elements of system management", options: ["Random", "Regular", "Accidental", "Occasional"], correct: "Regular", module: "InfoSec" },
+            { question: "What is the \"ease of protection\" of a single computer without e-mail or internet?", options: ["High", "Medium", "None of these", "Low"], correct: "High", module: "InfoSec" },
+            { question: "Which among the given is not a vulnerability of a single computer without e-mail or internet?", options: ["None of these", "Viruses", "Compromised passwords", "Sniffers"], correct: "Sniffers", module: "InfoSec" },
+            { question: "Which of the configurations is vulnerable to \"Sniffers\"?", options: ["Desktop Computer without E-mail", "LAN connected with or without Internet", "Desktop Computer without internet", "Laptop without Internet"], correct: "LAN connected with or without Internet", module: "InfoSec" },
+            { question: "\"Virus\" is a vulnerability of which configuration?", options: ["LAN connected with internet", "Single Computer (without E-mail or internet)", "All of these", "Laptop with E-mail"], correct: "All of these", module: "InfoSec" },
+            { question: "The \"Ease of protection\" of a LAN connected (with Internet) is \"High\".", options: ["True", "False"], correct: "False", module: "InfoSec" },
+            { question: "LAN connected (without internet) is vulnerable to \"spoofing\".", options: ["True", "False"], correct: "True", module: "InfoSec" },
+            { question: "Which of the given is an example of unintentional attack?", options: ["Brute force attack", "Wiretapping", "Hardware malfunction", "Phishing"], correct: "Hardware malfunction", module: "InfoSec" },
+            { question: "_____ is the act of disguising a communication from an unknown source as being from a known, trusted source", options: ["Blended Threat", "Sniffers", "Spyware", "Spoofing"], correct: "Spoofing", module: "InfoSec" },
+            { question: "Hoax Sites are used when unauthorized users want to disguise themselves as friendly sites.", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "Ransomware is a malware that demands a fee or ransom.", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "Antivirus softwares combat viruses.", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "Firewalls are important for security.", options: ["True", "False"], correct: "True", module: "InfoSec" },
+            { question: "Vishing is similar to smishing except that the victims receive a voice mail telling them to call a phone number or access a website.", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "\"Resistance to attacks\" is the same as ________.", options: ["Strategies to identify the attack", "Strategies for limiting damage", "Strategies for repelling attacks", "Strategies for detecting attacks"], correct: "Strategies for repelling attacks", module: "InfoSec" },
+            { question: "\"Adaptation and evolution to reduce effectiveness of future attacks\" is described as", options: ["Strategies for limiting damage", "Strategies for detecting attacks", "Strategies for improving system survivability based on knowledge retrieved from attacks", "Strategies for repelling attacks"], correct: "Strategies for improving system survivability based on knowledge retrieved from attacks", module: "InfoSec" },
+            { question: "What is the \"ease of protection\" of a LAN connected without Internet?", options: ["Low", "None of these", "Medium", "High"], correct: "Medium", module: "InfoSec" },
+            { question: "Hardware malfunction is an example of:", options: ["Unintentional Intrusion", "Intentional Intrusion", "Denial of service", "Trap door"], correct: "Unintentional Intrusion", module: "InfoSec" },
+            { question: "These refers to an unspecified and undocumented entry point to the system.", options: ["Wire Tapping", "Trap doors", "Browsing", "Repeated trials"], correct: "Trap doors", module: "InfoSec" },
+            { question: "Works by attaching itself to a template (such as NORMAL.DOT), which in turn is attached to word processing documents.", options: ["Big virus", "Mini virus", "Macro Virus", "Micro Virus"], correct: "Macro Virus", module: "InfoSec" },
+            { question: "Infects both the boot record and program files, making them especially difficult to repair.", options: ["Multipartite virus", "Master boot record virus", "Master virus", "Boot sector Virus"], correct: "Multipartite virus", module: "InfoSec" },
+            { question: "File infector virus infects files on your computer.", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "Which of these are the key properties of a survivable system?", options: ["Resistance to attacks", "Recovery of essential services after an attack", "All of the above", "Recognition of attacks and resulting damage"], correct: "All of the above", module: "InfoSec" },
+            { question: "\"Recognition of attacks and damage\" is described as ________.", options: ["Strategies for detecting attacks", "Strategies for limiting damage", "Strategies for repelling attacks"], correct: "Strategies for detecting attacks", module: "InfoSec" },
+            { question: "Which of the following example strategies does not belong to the key property \"Recovery of essential and full services after attack\"?", options: ["Data replication", "Contingency planning", "Authentication", "System backup and restoration"], correct: "Authentication", module: "InfoSec" },
+            { question: "Which among the given is not a vulnerability of a LAN connected without internet?", options: ["Sniffers", "E-mail", "Viruses", "Spoofing"], correct: "E-mail", module: "InfoSec" },
+            { question: "Refers to the use of discarded materials such as disks, CDs, printout, etc., to enter the system legally.", options: ["Wire Tapping", "Denial of Service (DoS) attack", "Trash Collection", "Trap doors"], correct: "Trash Collection", module: "InfoSec" },
+            { question: "A type of virus which is triggered by a specific time", options: ["Trojan virus", "Suicide Bomb", "Logic Bomb", "Time Bomb"], correct: "Time Bomb", module: "InfoSec" },
+            { question: "Repeated trials is also known as Brute Force Attack", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "Malicious or not, a breach of security severely damages the system's credibility", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "Which of the following example strategies belong to the key property \"Adaptation and evolution to reduce effectiveness of future attacks\"?", options: ["Intrusion recognition patterns", "System diversification", "Integrity checking", "Authentication"], correct: "Intrusion recognition patterns", module: "InfoSec" },
+            { question: "\"Sniffers\" is not a vulnerability of a LAN connected (with internet).", options: ["False", "True"], correct: "False", module: "InfoSec" },
+            { question: "To be called a virus, one must be self-executing and ________.", options: ["Self-modification", "Self-Conscious", "Self-replicating", "Self-aware"], correct: "Self-replicating", module: "InfoSec" },
+            { question: "Infects the boot record, the system area of a floppy disk or a hard drive.", options: ["Trojan horse virus", "File infector virus", "Macro virus", "Boot sector virus"], correct: "Boot sector virus", module: "InfoSec" },
+            { question: "This infects the boot record of a disk, saving a legitimate copy of the master boot record in a different location on the volume.", options: ["Master record virus", "Master boot record virus", "File infector virus", "Boot sector virus"], correct: "Master boot record virus", module: "InfoSec" },
+            { question: "Infects data files (such as word processing documents, spreadsheets, etc.)", options: ["Micro Virus", "Macro Virus", "Boot sector virus", "Multipartite virus"], correct: "Macro Virus", module: "InfoSec" },
+            { question: "Logic Bomb is a destructive program that can be triggered by a keystroke or connection with the Internet", options: ["True", "False"], correct: "True", module: "InfoSec" },
+            { question: "Worm is a program to use to enhance the speed of your computer.", options: ["True", "False"], correct: "False", module: "InfoSec" },
+            { question: "Sniffers are programs that reside on computer attached to the network", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "\"E-mail\" is a vulnerability of which configuration?", options: ["LAN connected (with internet)", "LAN connected without internet", "Single Computer (without E-mail or internet)", "Laptop without Internet"], correct: "LAN connected (with internet)", module: "InfoSec" },
+            { question: "\"Web Server\" is a vulnerability of which configuration?", options: ["Desktop Computer without internet", "Desktop Computer without E-mail", "LAN connected (with internet)", "Laptop without Internet"], correct: "LAN connected (with internet)", module: "InfoSec" },
+            { question: "\"E-mail\" is a vulnerability of LAN connected (with internet).", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "Snoopers are programs that reside on computers attached to the network.", options: ["False", "True"], correct: "False", module: "InfoSec" },
+            { question: "Security breach can happen due to uneducated users and unauthorized access to system resources", options: ["True", "False"], correct: "True", module: "InfoSec" },
+            { question: "Boot sector virus infects the boot record, the system area of a floppy disk or a hard drive.", options: ["True", "False"], correct: "True", module: "InfoSec" },
+            { question: "Any vulnerability at the ________ level opens the entire system to attack.", options: ["Operating system", "Utility", "User interface", "Keyboard"], correct: "Operating system", module: "InfoSec" },
+            { question: "Which among the given is a vulnerability of a single computer without e-mail or internet?", options: ["Compressed Passwords", "E-mail", "FTP", "Sniffers"], correct: "Compressed Passwords", module: "InfoSec" },
+            { question: "Which of the given is considered as system vulnerabilities", options: ["Email exchange", "Vulnerable firewalls", "All of these", "File downloads"], correct: "All of these", module: "InfoSec" },
+            { question: "It is the capability of a system to fulfill its mission, in a timely manner, in the presence of attacks, failures or accidents", options: ["Software", "Hardware", "System Upgrade", "System Survivability"], correct: "System Survivability", module: "InfoSec" },
+            { question: "What is the \"Relative risk\" of a LAN connected with internet?", options: ["Medium", "High", "None of these", "Low"], correct: "High", module: "InfoSec" },
+            { question: "Any breach of security or modification of data that was not the result of a planned intrusion.", options: ["Unintentional intrusions", "Trap door", "Intentional intrusions", "All of the above"], correct: "Unintentional intrusions", module: "InfoSec" },
+            { question: "Security breach is a gap in system security that can be malicious or not.", options: ["True", "False"], correct: "True", module: "InfoSec" },
+            { question: "Ransomware is similar to smishing except that the victims receive a voice mail telling them to call a phone number or access a website.", options: ["False", "True"], correct: "False", module: "InfoSec" },
+            { question: "Windows 10 is an example of hand-held operating system", options: ["False", "True"], correct: "False", module: "InfoSec" },
+            { question: "LAN connected (without internet) is vulnerable to \"sniffers\".", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "What is the \"ease of protection\" of a LAN connected with internet?", options: ["None of these", "Low", "Medium", "High"], correct: "Low", module: "InfoSec" },
+            { question: "Spoofing is the act of disguising a communication from an unknown source as being from a known, trusted source.", options: ["True", "False"], correct: "True", module: "InfoSec" },
+            { question: "Vishing is a type of phishing that involves the use of short messages service (SMS) texting.", options: ["False", "True"], correct: "False", module: "InfoSec" },
+            { question: "Which of the following example strategies does not belong to the key property \"Recover of essential and full services after attack\"?", options: ["Authentication", "Encryption", "Intrusion detection", "All of these"], correct: "All of these", module: "InfoSec" },
+            { question: "Infects files on the computer, normally executable files (.exe and .com) commonly found on Microsoft operating systems.", options: ["Master Boot record virus", "File replication virus", "Boot sector virus", "File infector virus"], correct: "File infector virus", module: "InfoSec" },
+            { question: "Which of the given is an example strategy of the key property \"Recognition of attack and damage\"?", options: ["Intrusion recognition patterns", "Intrusion detection", "Access controls", "Authentication"], correct: "Intrusion detection", module: "InfoSec" },
+            { question: "________ plays a key role in computer system security.", options: ["Application Software", "Driver", "Operating System", "MS Word"], correct: "Operating System", module: "InfoSec" },
+            { question: "Spear-phishing is variation of phishing In which the phishier sends fake emails to a certain employee of an organization.", options: ["False", "True"], correct: "True", module: "InfoSec" },
+            { question: "Antivirus software can remove all impurities from your computer.", options: ["True", "False"], correct: "False", module: "InfoSec" },
+
+            // FORMATIVE 4-5: OPERATING SYSTEMS
+            { question: "This bit is set to ____ to indicate that a corresponding page is in secondary storage.", options: ["Validated", "Invalid", "Valid", "Unknown"], correct: "Invalid", module: "OS" },
+            { question: "This occurs if there is a need to transfer a page from disk to memory but there is no memory space available", options: ["Memory is overpopulated", "Memory is overflowing", "Memory is over-allocated", "Memory is overloading"], correct: "Memory is over-allocated", module: "OS" },
+            { question: "In this scheme, the operating system removes or replaces one of the existing pages in memory to give away for the incoming page.", options: ["Page memory", "Page hit", "Page fault", "Page replacement"], correct: "Page replacement", module: "OS" },
+            { question: "A page replacement algorithm is necessary to select which among the pages currently residing in ________ will be replaced.", options: ["Main memory", "Cache memory", "Physical memory", "Hard disk"], correct: "Main memory", module: "OS" },
+            { question: "This bit is set to valid to indicate that a corresponding page is in memory.", options: ["True", "False"], correct: "True", module: "OS" },
+            { question: "The first step in page fault service routine is to find a free frame.", options: ["True", "False"], correct: "False", module: "OS" },
+            { question: "Multi programming allows to keep many processes in memory simultaneously", options: ["False", "True"], correct: "True", module: "OS" },
+            { question: "Modify bit is also known as dirty bit.", options: ["True", "False"], correct: "True", module: "OS" },
+            { question: "Solve: 1 3 0 3 5 6 3 using 3 frames (FIFO). Number of page faults?", options: ["4", "7", "6", "5"], correct: "6", module: "OS" },
+            { question: "Solve: 1 3 0 3 5 6 3 using 3 frames (OPTIMAL). Number of page faults?", options: ["5", "7", "6", "4"], correct: "5", module: "OS" },
+            { question: "Solve: 1 3 0 3 5 6 3 using 4 frames (LRU). Number of hits?", options: ["1", "2", "4", "3"], correct: "2", module: "OS" },
+            { question: "Solve: 7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1 using 3 frames (FIFO). Number of page faults?", options: ["12", "13", "14", "15"], correct: "15", module: "OS" },
+            { question: "Solve: 7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1 using 3 frames (LRU). Number of page faults?", options: ["13", "12", "11", "10"], correct: "12", module: "OS" },
+            { question: "Solve: 7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1 using 3 frames (OPTIMAL). Number of page hits?", options: ["13", "12", "11", "14"], correct: "11", module: "OS" },
+            { question: "Solve: 7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1 using 3 frames (LRU). Number of hits?", options: ["9", "10", "7", "8"], correct: "8", module: "OS" },
+            { question: "Solve: 7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1 using 5 frames (FIFO). Number of page hits?", options: ["13", "12", "11", "10"], correct: "10", module: "OS" },
+            { question: "Solve: 9 5 7 9 1 1 4 8 0 1 0 2 7 using 4 frames (LRU). Number of page faults?", options: ["9", "8", "7", "6"], correct: "9", module: "OS" },
+            { question: "Solve: 9 5 7 9 1 1 4 8 0 1 0 2 7 using 4 frames (LRU). Number of hits?", options: ["11", "9", "6", "4"], correct: "4", module: "OS" },
+            { question: "In lazy swapping, the OS swaps only the necessary pages into memory.", options: ["True", "False"], correct: "True", module: "OS" },
+            { question: "Virtual memory is the separation of user logical memory from", options: ["Cache memory", "Physical Memory", "Executable Memory", "Virtual Memory"], correct: "Physical Memory", module: "OS" },
+            { question: "________ paging system is similar to a paging system with swapping system.", options: ["Passive", "Demand", "Active", "Forced"], correct: "Demand", module: "OS" },
+            { question: "The last step for page fault service routine is", options: ["if there is a free frame, use it", "shutdown the user process", "restart the user process", "find a free frame"], correct: "restart the user process", module: "OS" },
+            { question: "One major advantage of virtual memory is that programs can be ________ than physical memory.", options: ["Shorter", "Reduced", "Smaller", "Larger"], correct: "Larger", module: "OS" },
+            { question: "Over-allocated memory occurs if there is a need to transfer a page from disk to memory but there is ________ available memory space", options: ["huge", "free", "no", "big"], correct: "no", module: "OS" },
+            { question: "This bit is set to invalid to indicate that a corresponding page is in secondary storage.", options: ["False", "True"], correct: "True", module: "OS" },
+            { question: "If a process tries to use a page that is not in physical memory, then a page fault will occur.", options: ["True", "False"], correct: "True", module: "OS" },
+            { question: "The effectiveness of the demand paging is based on a property of computer programs called the publicity of reference.", options: ["False", "True"], correct: "False", module: "OS" },
+            { question: "One of the major advantages of Virtual memory is that programs can be larger than physical memory.", options: ["False", "True"], correct: "True", module: "OS" },
+            { question: "Solve: 1 3 0 3 5 6 3 using 3 frames (LRU). Number of hits?", options: ["4", "2", "3", "1"], correct: "2", module: "OS" },
+            { question: "Solve: 1 3 0 3 5 6 3 using 4 frames (OPTIMAL). Number of hits?", options: ["2", "9", "1", "8"], correct: "2", module: "OS" },
+            { question: "Solve: 7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1 using 5 frames (OPTIMAL). Number of page faults?", options: ["12", "13", "7", "8"], correct: "7", module: "OS" },
+            { question: "Solve: 7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1 using 5 frames (OPTIMAL). Number of page hits?", options: ["12", "7", "8", "13"], correct: "13", module: "OS" },
+            { question: "Solve: 9 5 7 9 1 1 4 8 0 1 0 2 7 using 4 frames (FIFO). Number of page faults?", options: ["8", "7", "6", "9"], correct: "9", module: "OS" },
+            { question: "This bit is set to ________ to indicate that a corresponding page is in memory.", options: ["validated", "unknown", "invalid", "valid"], correct: "valid", module: "OS" },
+            { question: "The ________ ensures that programs do not access a new page of memory with each instruction execution", options: ["hoax of locality of reference", "presentation of locality of reference", "declaration of locality of reference", "principle of locality of reference"], correct: "principle of locality of reference", module: "OS" },
+            { question: "Virtual memory is a technique that allows the execution of processes that may not be completely in memory", options: ["True", "False"], correct: "True", module: "OS" },
+            { question: "Demand paging system is similar to paging system with swapping.", options: ["True", "False"], correct: "True", module: "OS" },
+            { question: "If a process tries to use a page that is not in physical memory, then a page bug will occur.", options: ["True", "False"], correct: "False", module: "OS" },
+            { question: "The modify bit for a page is set whenever any word or byte is written into, indicating that the page has been modified", options: ["False", "True"], correct: "True", module: "OS" },
+            { question: "Virtual memory is a technique that frees programmers from the concerns of memory-storage limitations", options: ["False", "True"], correct: "True", module: "OS" },
+            { question: "Solve: 1 3 0 3 5 6 3 using 4 frames (LRU). Number of page faults?", options: ["5", "6", "4", "7"], correct: "5", module: "OS" },
+            { question: "Solve: 1 3 0 3 5 6 3 using 4 frames (FIFO). Number of page hits?", options: ["3", "2", "1", "4"], correct: "2", module: "OS" },
+            { question: "Solve: 7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1 using 3 frames (FIFO). Number of page hits?", options: ["13", "5", "12", "6"], correct: "5", module: "OS" },
+            { question: "Solve: 7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1 using 5 frames (FIFO). Number of page faults?", options: ["10", "8", "9", "7"], correct: "10", module: "OS" },
+            { question: "Solve: 9 5 7 9 1 1 4 8 0 1 0 2 7 using 4 frames (OPTIMAL). Number of page hits?", options: ["8", "7", "6", "5"], correct: "5", module: "OS" },
+            { question: "If a process tries to use a page that is not in physical memory, then a ________ will occur.", options: ["page-in", "page-fault", "page-bug", "page-out"], correct: "page-fault", module: "OS" },
+            { question: "One of the major advantages of Virtual memory is that programs can be larger than ________.", options: ["Physical memory", "Executable memory", "Reflex memory", "Cache memory"], correct: "Physical memory", module: "OS" },
+            { question: "It is important to keep the page-fault rate low in a demand-paging system.", options: ["False", "True"], correct: "True", module: "OS" },
+            { question: "Solve: 1 3 0 3 5 6 3 using 3 frames (OPTIMAL). Number of hits?", options: ["3", "7", "9", "1"], correct: "1", module: "OS" },
+            { question: "Solve: 7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1 using 3 frames (OPTIMAL). Number of page faults?", options: ["10", "13", "9", "14"], correct: "13", module: "OS" },
+            { question: "Solve: 9 5 7 9 1 1 4 8 0 1 0 2 7 using 4 frames (OPTIMAL). Number of page faults?", options: ["13", "12", "7", "8"], correct: "8", module: "OS" },
+            { question: "The principle of locality of reference ensures that programs do not access a new page of memory with each instruction execution.", options: ["False", "True"], correct: "True", module: "OS" },
+            { question: "The effectiveness of the demand paging is based on a property of computer programs called the locality of reference.", options: ["False", "True"], correct: "True", module: "OS" },
+            { question: "Solve: 7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1 using 5 frames (LRU). Number of hits?", options: ["7", "13", "8", "12"], correct: "13", module: "OS" },
+            { question: "Solve: 9 5 7 9 1 1 4 8 0 1 0 2 7 using 4 frames (FIFO). Number of page hits?", options: ["4", "9", "6", "11"], correct: "4", module: "OS" },
+            { question: "The effectiveness of the demand paging is based on a property of computer programs called the ________.", options: ["locality of reference", "globality of reference", "privacy of reference", "publicity of reference"], correct: "locality of reference", module: "OS" },
+            { question: "This bit is set to valid to indicate that a corresponding page is in secondary storage.", options: ["False", "True"], correct: "False", module: "OS" },
+            { question: "Solve: 1 3 0 3 5 6 3 using 3 frames (LRU). Number of page faults?", options: ["6", "5", "7", "4"], correct: "5", module: "OS" },
+            { question: "Which is not a part of the page fault service routine?", options: ["find a free frame", "If there is a free frame discard it", "restart the user process", "shutdown the user process"], correct: "If there is a free frame discard it", module: "OS" },
+            { question: "It is important to keep the page-fault rate high in a demand-paging system.", options: ["False", "True"], correct: "False", module: "OS" },
+            { question: "The memory is over allocated when there is a need to transfer a page from memory to disk but there is no logical memory space available", options: ["True", "False"], correct: "True", module: "OS" },
+            { question: "It is a swapping technique where instead of swapping the entire process into memory, the OS swaps only the necessary pages into memory.", options: ["Passive Swapping", "Fast Swapping", "Active swapping", "Lazy swapping"], correct: "Lazy swapping", module: "OS" },
+            { question: "Page replacement takes the following approach: If no frames is free, the system finds one that is currently being used and frees it", options: ["True", "False"], correct: "True", module: "OS" },
+            { question: "What is the first step for page fault service routine is", options: ["use a page-replacement algorithm to select a victim frame.", "find a free frame", "restart the user process", "find the location of the desired page on the disk"], correct: "find the location of the desired page on the disk", module: "OS" },
+            { question: "In demand paging system, there is an additional bit in the page table which is the valid-invalid bit", options: ["False", "True"], correct: "True", module: "OS" },
+            { question: "Solve: 1 3 0 3 5 6 3 using 3 frames (FIFO). Number of page hits?", options: ["1", "2", "12", "13"], correct: "1", module: "OS" },
+            { question: "This bit is set to invalid to indicate that a corresponding page is in memory.", options: ["True", "False"], correct: "False", module: "OS" },
+            { question: "In virtual memory, programs can be greater than ________ memory.", options: ["cache", "physical", "logical", "executable"], correct: "physical", module: "OS" },
+            { question: "It provides the bulk of secondary storage for modern computer systems.", options: ["RAM", "Registers", "Cache memory", "Magnetic Disk"], correct: "Magnetic Disk", module: "OS" },
+            { question: "Each disk platter has a flat ________ shape, like a phonograph record.", options: ["triangular", "circular", "oval", "square"], correct: "circular", module: "OS" },
+            { question: "In a disk the information is recorded on the ________.", options: ["surface", "inside", "edge", "outside"], correct: "surface", module: "OS" },
+            { question: "An incident where the head contacts the disk surface, the head will scrape the recording medium off the disk.", options: ["Head bang", "Head crushes", "Head accident", "Head crashes"], correct: "Head crashes", module: "OS" },
+            { question: "________ was used as an early secondary-storage medium, but the access time is much slower than for disks.", options: ["Magnetic Tape", "video tape", "electrical tape", "Magnetism tape"], correct: "Magnetic Tape", module: "OS" },
+            { question: "A ________ has a separate read-write head for each track.", options: ["Movable-head system", "Fixed-head system", "Rotational-head system", "Magnetic tape"], correct: "Fixed-head system", module: "OS" },
+            { question: "A ________ movable-head system has only one read-write head per surface and the system moves the head to access a particular track", options: ["Movable-Joint System", "Rotational-head system", "Fixed-Head System", "Movable-Head system"], correct: "Movable-Head system", module: "OS" },
+            { question: "A disk normally has a device ________ indicating which files are on the disk.", options: ["housing", "cabinet", "directory"], correct: "directory", module: "OS" },
+            { question: "One or more blocks that are unreadable or not writable", options: ["Bad block", "Boot block", "Closed block", "Bug block"], correct: "Bad block", module: "OS" },
+            { question: "It is the time it takes to actually transfer data between disk and main memory.", options: ["Latency Time", "Transfer time", "Rotation time", "Seek time"], correct: "Transfer time", module: "OS" },
+            { question: "LOOK disk scheduling algorithm is sometimes called the elevator algorithm", options: ["True", "False"], correct: "False", module: "OS" },
+            { question: "The Shortest Seek Time First disk scheduling selects the request with the minimum seek time from the current head position.", options: ["True", "False"], correct: "True", module: "OS" },
+            { question: "C-SCAN scheduling essentially treats the disk as though it were circular where the last track is adjacent to the first one.", options: ["True", "False"], correct: "True", module: "OS" },
+            { question: "In C-SCAN scheduling, when it reaches the other end, it immediately returns to the beginning of the disk without servicing any requests on the return trip.", options: ["True", "False"], correct: "True", module: "OS" },
+            { question: "Using SCAN (Queue: 98, 53, 22, 16, 24; Head: 32; 0-99). What is the last served track request?", options: ["track 1", "track 99", "track 0", "track 98"], correct: "track 0", module: "OS" },
+            { question: "Using LOOK (going lower tracks) (Queue: 98, 53, 22, 16, 24; Head: 32). What is the first served track request?", options: ["16 tracks", "53 tracks", "24 tracks", "99 tracks"], correct: "24 tracks", module: "OS" },
+            { question: "A typical hard disk have a rotation speed from ____", options: ["500 to 1200", "3500 to 6200", "4500 to 7200", "3500 to 7200"], correct: "4500 to 7200", module: "OS" },
+            { question: "These disks are coated with a hard surface, so the read-write head scans it directly on the disk surface without destroying the data.", options: ["compact discs", "flappy disks", "Blu-ray discs", "floppy disks"], correct: "floppy disks", module: "OS" },
+            { question: "Modern disks are addressed as large one-dimensional arrays of logical blocks, where the ________ is the smallest unit of transfer.", options: ["logical block", "local block", "physical block", "sector block"], correct: "logical block", module: "OS" },
+            { question: "The size of a logical block is usually ________ bytes.", options: ["215", "125", "64", "512"], correct: "512", module: "OS" },
+            { question: "It is a way to read and write data on disks, where the density of bits (bits/unit length) per track is uniform.", options: ["Constant Linear Velocity", "Constant Angular Velocity", "Constant Line Velocity", "Constant Circular Velocity"], correct: "Constant Linear Velocity", module: "OS" },
+            { question: "It is a way to read and write data on disks, where the number of bits per track is uniform (constant number of sectors).", options: ["Constant Linear Velocity", "Constant Line Velocity", "Constant Angle Velocity", "Constant Angular Velocity"], correct: "Constant Angular Velocity", module: "OS" },
+            { question: "It is the time it takes to move the read-write head to the correct track.", options: ["Transfer time", "Rotation time", "Seek time", "Latency time"], correct: "Seek time", module: "OS" },
+            { question: "The Look disk scheduling selects the request with the minimum seek time from the current head position.", options: ["False", "True"], correct: "False", module: "OS" },
+            { question: "Since most jobs depend heavily on the disk for loading and input and output files, it is important that disk service be as fast as possible.", options: ["False", "True"], correct: "True", module: "OS" },
+            { question: "The OS can improve on the average disk service time by scheduling the requests for disk access.", options: ["True", "False"], correct: "True", module: "OS" },
+            { question: "Using LOOK (going higher tracks) (Queue: 98, 53, 22, 16, 24; Head: 32). What is the first served track request?", options: ["track 98", "track 53", "track 99", "track 24"], correct: "track 53", module: "OS" },
+            { question: "Using FCFS (Queue: 39, 14, 38, 17; Head: 10). What is the last served track request?", options: ["Track 16", "track 0", "track 99", "track 17"], correct: "track 17", module: "OS" },
+            { question: "Using LOOK (going higher tracks) (Queue: 39, 14, 38, 17; Head: 10). How many THM?", options: ["30 tracks", "43 tracks", "44 tracks", "29 tracks"], correct: "29 tracks", module: "OS" },
+            { question: "Using LOOK (going lower tracks) (Queue: 39, 14, 38, 17; Head: 10). What is the first served track request?", options: ["24 tracks", "61 tracks", "53 tracks", "16 tracks"], correct: "24 tracks", module: "OS" },
+            { question: "Using LOOK (going lower tracks) (Queue: 39, 14, 38, 17; Head: 10). What is the last served track request?", options: ["85 tracks", "130 tracks", "143 tracks", "98 tracks"], correct: "98 tracks", module: "OS" },
+            { question: "The main requirement of secondary storage is to be able to store very large amount of data ________.", options: ["everyday", "permanently", "temporarily", "sometime"], correct: "permanently", module: "OS" },
+            { question: "One of the earliest secondary-storage media is the ________.", options: ["Magnetic Tape", "Compact Disc", "Duct Tape", "Floppy Disk"], correct: "Magnetic Tape", module: "OS" },
+            { question: "Using C-SCAN (going lower tracks) (Queue: 39, 14, 38, 17; Head: 10). What is the farthest distance between 2 tracks?", options: ["44 tracks", "43 tracks", "30 tracks", "29 tracks"], correct: "29 tracks", module: "OS" },
+            { question: "A ________ disk system has several disk platters.", options: ["Magnetic", "Soft", "Hard", "Electrical"], correct: "Magnetic", module: "OS" },
+            { question: "________ are rigid metal or glass platters covered with magnetic recording material.", options: ["Compact Disc", "Flash Drive", "Video tape", "Disks"], correct: "Disks", module: "OS" },
+            { question: "Using LOOK (going higher tracks) (Queue: 98, 53, 22, 16, 24; Head: 32). What is the last served track request?", options: ["track 16", "track 98", "track 53", "track 24"], correct: "track 16", module: "OS" },
+            { question: "Using SCAN (heading towards 0) (Queue: 39, 14, 38, 17; Head: 10). How many THM?", options: ["99 tracks", "98 tracks", "49 tracks", "48 tracks"], correct: "49 tracks", module: "OS" },
+            { question: "The system stores information by recording it ________ on the sector under the read-write head.", options: ["mentally", "logically", "mechanically", "magnetically"], correct: "magnetically", module: "OS" },
+            { question: "Which of the given is considered aspects of disk management for which an operating system is responsible.", options: ["Booting from disk", "all of these", "Bad-block recovery", "disk formatting"], correct: "all of these", module: "OS" },
+            { question: "The Shortest Seek Time First disk scheduling selects the request with the maximum seek time from the current head position.", options: ["True", "False"], correct: "False", module: "OS" },
+            { question: "The First Come First Served disk scheduling selects the request according to the order in the disk queue", options: ["False", "True"], correct: "True", module: "OS" },
+            { question: "Using SSTF (Queue: 98, 53, 22, 16, 24; Head: 32). How many THM?", options: ["53 tracks", "130 tracks", "98 tracks", "158 tracks"], correct: "98 tracks", module: "OS" },
+            { question: "Using LOOK (going lower tracks) (Queue: 98, 53, 22, 16, 24; Head: 32). What is the last served track request?", options: ["143 tracks", "98 tracks", "99 tracks", "130 tracks"], correct: "98 tracks", module: "OS" },
+            { question: "Using SSTF (Queue: 39, 14, 38, 17; Head: 10). How many THM?", options: ["158 tracks", "29 tracks", "130 tracks", "39 tracks"], correct: "29 tracks", module: "OS" },
+            { question: "Using LOOK (going higher tracks) (Queue: 39, 14, 38, 17; Head: 10). What is the first served track request?", options: ["track 14", "track 99", "track 24", "track 79"], correct: "track 14", module: "OS" },
+            { question: "Using C-SCAN (going lower tracks) (Queue: 98, 53, 22, 16, 24; Head: 32). What is the farthest distance between 2 tracks?", options: ["69 tracks", "39 tracks", "99 tracks", "102 tracks"], correct: "99 tracks", module: "OS" },
+            { question: "Using SCAN (heading towards 0) (Queue: 39, 14, 38, 17; Head: 10). What is the last served track request?", options: ["track 0", "track 38", "track 67", "track 99"], correct: "track 0", module: "OS" },
+            { question: "Using C-LOOK (going lower tracks) (Queue: 39, 14, 38, 17; Head: 10). How many THM?", options: ["43 tracks", "48 tracks", "54 tracks", "59 tracks"], correct: "54 tracks", module: "OS" },
+            { question: "Using SSTF (Queue: 98, 53, 22, 16, 24; Head: 32). What is the first served track request?", options: ["track 1", "track 0", "track 99", "track 24"], correct: "track 24", module: "OS" },
+            { question: "Using FCFS (Queue: 39, 14, 38, 17; Head: 10). How many THM?", options: ["130 tracks", "131 tracks", "99 tracks", "98 tracks"], correct: "99 tracks", module: "OS" },
+            { question: "Using SCAN (heading towards 0) (Queue: 98, 53, 22, 16, 24; Head: 32). How many THM?", options: ["130 tracks", "108 tracks", "148 tracks", "190 tracks"], correct: "130 tracks", module: "OS" },
+            { question: "Using LOOK (going higher tracks) (Queue: 98, 53, 22, 16, 24; Head: 32). How many THM?", options: ["147 tracks", "130 tracks", "148 tracks", "143 tracks"], correct: "148 tracks", module: "OS" },
+            { question: "Using C-SCAN (going lower tracks) (Queue: 39, 14, 38, 17; Head: 10). What is the shortest distance between 2 tracks?", options: ["0 track", "2 tracks", "3 tracks", "1 track"], correct: "1 track", module: "OS" },
+            { question: "Using C-SCAN (going lower tracks) (Queue: 39, 14, 38, 17; Head: 10). How many THM?", options: ["156 tracks", "194 tracks", "175 tracks", "130 tracks"], correct: "194 tracks", module: "OS" },
+            { question: "The disk surface is logically divided into ________ which are subdivided into sectors.", options: ["tracks", "bits", "patterns", "waves"], correct: "tracks", module: "OS" },
+            { question: "It is the time it takes for the sector to rotate under the head.", options: ["Latency time", "Seek time", "Rotation time", "Transfer Time"], correct: "Latency time", module: "OS" },
+            { question: "Using C-SCAN (going lower tracks) (Queue: 39, 14, 38, 17; Head: 10). What is the farthest distance between 2 tracks?", options: ["99 tracks", "39 tracks", "102 tracks", "42 tracks"], correct: "99 tracks", module: "OS" },
+            { question: "Using C-SCAN (going lower tracks) (Queue: 98, 53, 22, 16, 24; Head: 32). What is the farthest distance between 2 tracks?", options: ["98 tracks", "121 tracks", "130 tracks", "143 tracks"], correct: "98 tracks", module: "OS" },
+            { question: "Using FCFS (Queue: 98, 53, 22, 16, 24; Head: 32). How many THM?", options: ["98 tracks", "130 tracks", "53 tracks", "156 tracks"], correct: "156 tracks", module: "OS" },
+            { question: "Using C-LOOK (going lower tracks) (Queue: 98, 53, 22, 16, 24; Head: 32). How many THM?", options: ["148 tracks", "143 tracks", "159 tracks", "146 tracks"], correct: "143 tracks", module: "OS" },
+            { question: "Using SSTF (Queue: 39, 14, 38, 17; Head: 10). What is the first served track request?", options: ["track 19", "track 14", "track 39", "track 0"], correct: "track 14", module: "OS" },
+            { question: "Using SSTF (Queue: 98, 53, 22, 16, 24; Head: 32). What is the last served track request?", options: ["track 0", "track 99", "track 98", "track 1"], correct: "track 98", module: "OS" }
+
+                // NEW QUESTIONS FROM FA1_OS.pdf
+    ,{ question: "Operating system ______ and coordinates the use of the hardware among the various application programs for the various users.", options: ["terminates", "checks", "controls", "monitors"], correct: "controls", module: "OS" },
+    { question: "It is the central part of an OS which manages system resources and is always resident in memory.", options: ["Bootloader", "BIOS", "IOS", "Kernel"], correct: "Kernel", module: "OS" },
+    { question: "In program execution, the OS must have the capability to load a program into ______ and execute that program.", options: ["Directories", "Memory", "Hard Disk", "Data"], correct: "Memory", module: "OS" },
+    { question: "Which is not an example of storage device?", options: ["Keyboard", "RAM", "Hard Disk", "ROM"], correct: "Keyboard", module: "OS" },
+    { question: "Kernel acts like bridge between application and computer hardware.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "Time-sharing is also known as multitasking.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "Distributed system is also known as loosely coupled system.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "UNIX is an example of Network OS.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "Cloud computing is an example of distributed system", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "Cloud services offered are available via the Internet.", options: ["Private Cloud", "Hybrid Cloud", "Public Cloud", "Virtual Cloud"], correct: "Public Cloud", module: "OS" },
+    { question: "A type of computing environment where all nodes are considered peers.", options: ["Peer-to-peer", "Client-Server", "Virtual Computing", "Cloud Computing"], correct: "Peer-to-peer", module: "OS" },
+    { question: "In computer system organization, one or more CPUs, device controllers connect through common bus providing access to shared memory.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "Hardware interrupt is a signal created and sent to the CPU that is caused by some action taken by a software.", options: ["True", "False"], correct: "False", module: "OS" },
+    { question: "In computer system operation, each device controller has a local buffer.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "Some instructions designated as privileged, only executable in kernel mode", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "Increased throughput means increasing the number of processor, expect to get more work done in more time.", options: ["False", "True"], correct: "False", module: "OS" },
+    { question: "Dual-mode operation allows OS to protect itself and other system components.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "Asymmetric clustering has one machine in hot-standby mode.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "Software as a service(SaaS) provides one or more applications available via the Internet", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "Refers to computing on handheld smartphones and tablet computers", options: ["Calculator", "Desktop", "Cloud", "Mobile"], correct: "Mobile", module: "OS" },
+    { question: "This refers to a text-based type of user interface.", options: ["Batch-based Interface", "Graphical User Interface", "Command Line Interface", "Menu-based Interface"], correct: "Command Line Interface", module: "OS" },
+    { question: "Which is not an example of application software?", options: ["NotePad", "Sticky Note", "Windows 10", "MS word"], correct: "Windows 10", module: "OS" },
+    { question: "Which is not an example of system software?", options: ["NotePad", "Linux", "Windows 10", "MS word"], correct: "MS word", module: "OS" },
+    { question: "The operating system should be able to detect ______ within the computer system and take the appropriate action.", options: ["Virus", "errors", "files", "programs"], correct: "errors", module: "OS" },
+    { question: "Operating System runs on a server and provides the server the capability to manage data, users, groups, security, applications, and other networking functions.", options: ["Network", "Batch", "Real time", "Distributed"], correct: "Network", module: "OS" },
+    { question: "User can use computer even without an operating system.", options: ["True", "False"], correct: "False", module: "OS" },
+    { question: "Computer user is one of the components of computer system.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "A type of interrupt handling in which the requesting device sends interrupt to the operating system.", options: ["Vectored Interrupt System", "Polling", "Forwarding", "System Call"], correct: "Vectored Interrupt System", module: "OS" },
+    { question: "A type of multiprocessing in which each processor performs all tasks within the operating system. All processors are peers and no boss-worker relationship.", options: ["Asymmetric", "Symmetric", "Systematic", "Asynchronous"], correct: "Symmetric", module: "OS" },
+    { question: "It is a type of computing that delivers computing, storage and even applications as a service across a network", options: ["Cloud Computing", "Virtual Computing", "Mental Computing", "Mobile Computing"], correct: "Cloud Computing", module: "OS" },
+    { question: "A computer system is made up of various components such as hardware and software.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "In Asymmetric multiprocessing, all processors are considered peers.", options: ["False", "True"], correct: "False", module: "OS" },
+    { question: "OS is an interrupt driven environment.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "Buffer is a region of memory used to permanently hold data while it is being moved from one place to another.", options: ["False", "True"], correct: "False", module: "OS" },
+    { question: "Platform as a service(PaaS) provides software stack ready for application use via the Internet.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "_____ is a program that acts as an interface or intermediary between the computer user and computer hardware", options: ["Driver", "Java", "Operating System", "Application Software"], correct: "Operating System", module: "OS" },
+    { question: "This refers to the part of an OS, or device that allows a user to enter and receive information.", options: ["User Feature", "User Experience", "User Profile", "User Interface"], correct: "User Interface", module: "OS" },
+    { question: "A type of OS where the user has no direct interaction with the computer.", options: ["Time-Sharing OS", "BIOS", "Batch OS", "Real-Time OS"], correct: "Batch OS", module: "OS" },
+    { question: "Distributed systems use ______ central processors to serve multiple real-time applications and multiple users.", options: ["zero", "dual", "single", "multiple"], correct: "multiple", module: "OS" },
+    { question: "Users are the one who utilize a computer or network service trying to solve different problems.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "Using the computer hardware in an efficient manner is one of the goals of OS.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "Real-time systems are used when there are time requirements or constraints like missile systems.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "interrupt is a signal created and sent to the CPU that is caused by some action taken by a hardware device.", options: ["Lost", "Software", "System", "HardWare"], correct: "HardWare", module: "OS" },
+    { question: "An operating system that provides services across the network.", options: ["Windows Server", "Virtual Computing", "Android OS", "Cloud Computing"], correct: "Windows Server", module: "OS" },
+    { question: "Symmetric multiprocessing applies a boss-worker relationship among processors.", options: ["True", "False"], correct: "False", module: "OS" },
+    { question: "Software Interrupt arises due to illegal and erroneous use of an instruction or data.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "The main memory is central to the operation of a modern computer system.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "Infrastructure as a service is a type of cloud computing service in which servers or storage are available over the Internet.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "This refers to CPU, memory, and I/O devices", options: ["Data", "Software", "Utility", "Hardware"], correct: "Hardware", module: "OS" },
+    { question: "Operating System is an OS intended to serve real-time systems/ applications that process data as it comes in, mostly without buffer delay.", options: ["Network", "Real Time", "Distributed", "Handheld"], correct: "Real Time", module: "OS" },
+    { question: "Kernel is the first program that loads after the bootloader.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "Android is an example of Handheld OS.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "The device controllers use a/n ______ to inform the CPU that I/O operation is completed.", options: ["interrupt", "disturb", "link", "buffer"], correct: "interrupt", module: "OS" },
+    { question: "It alerts the processor temporarily to a high priority process requiring interruption of the current working process and then return to its previous task.", options: ["Link", "Disturb", "Bug", "Interrupt"], correct: "Interrupt", module: "OS" },
+    { question: "interrupt arises due to illegal and erroneous use of an instruction or data", options: ["Hardware", "System", "Software", "Lost"], correct: "Software", module: "OS" },
+    { question: "It is a collection of physically separate, possibly heterogeneous computer systems that are networked to provide users with access to the various resources that the system maintains.", options: ["Traditional Computing", "System Computing", "Distributed Systems", "Virtualization"], correct: "Distributed Systems", module: "OS" },
+    { question: "Refers to computing on handheld smartphones and tablet computers.", options: ["Mobile Computing", "Cloud Computing", "Client-server", "Virtual Computing"], correct: "Mobile Computing", module: "OS" },
+    { question: "Buffer is a region of memory used to temporarily hold data while it is being moved from one place to another.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "This refers to a non-interactive user interface, where the user specifies all the details of the batch job in advance to batch processing, and receives the output when all the processing is done.", options: ["Batch-Based OS", "Command Line Interface", "Menu-based Interface", "Graphical User Interface"], correct: "Batch-Based OS", module: "OS" },
+    { question: "is a defense of the system against internal and external attacks.", options: ["Protection", "Quarantine", "Defense", "Security"], correct: "Security", module: "OS" },
+    { question: "A software that controls and coordinates the use of the hardware among the various application programs for the various users.", options: ["Application software", "Driver", "Operating System", "Application Programs"], correct: "Operating System", module: "OS" },
+    { question: "Windows 10 is an example of hand-held operating system.", options: ["True", "False"], correct: "False", module: "OS" },
+    { question: "In computer system organization, one or more CPUs, device controllers connect through common ______ providing access to shared memory.", options: ["bus", "data", "link", "node"], correct: "bus", module: "OS" },
+    { question: "A software-generated interrupt caused either by an error or a user request is called ______.", options: ["Trap", "System call", "Lost interrupt", "Interrupt"], correct: "Trap", module: "OS" },
+    { question: "The I/O devices and the CPU both execute concurrently.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "These are used to solve user computing problems such as word processors and business programs", options: ["Anti-Virus programs", "Utility Programs", "Operating Systems", "Application Programs"], correct: "Application Programs", module: "OS" },
+    { question: "is a program that loads and starts the boot time tasks and processes of an OS.", options: ["Bootloader", "BIOS", "Powerboot", "Kernel"], correct: "Bootloader", module: "OS" },
+    { question: "is any mechanism for controlling access of processes or users to resources defined by the OS.", options: ["Quarantine", "Algorithm", "Protection", "Security"], correct: "Protection", module: "OS" },
+    { question: "A type of interrupt handling in which the OS sends signal to each devices asking if they have a request.", options: ["Calling", "Forwarding", "Polling", "Vectored interrupt system"], correct: "Polling", module: "OS" },
+    { question: "A ______ is a way for programs to interact with the OS.", options: ["Trap", "User call", "Virus", "System Call"], correct: "System Call", module: "OS" },
+    { question: "A type of multiprocessing in which a boss processor controls the system and the other processors either look to the boss for instructions or have predefined tasks.", options: ["Systematic", "Symmetric", "Synchronous", "Asymmetric"], correct: "Asymmetric", module: "OS" },
+    { question: "Private cloud runs by a company for that company's own use.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "Bootloader is a program that loads and ends the boot time tasks and processes of an OS.", options: ["False", "True"], correct: "False", module: "OS" },
+    { question: "The OS manages the different computer resources such as CPU time, memory space, file storage space, I/O devices, etc. and allocates them to different application programs and users.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "The OS is not responsible for reading and/ or writing data from I/O devices such as disks, tapes, printers, keyboards, etc.", options: ["True", "False"], correct: "False", module: "OS" },
+    { question: "Cold boot is also known as reboot or reset.", options: ["False", "True"], correct: "False", module: "OS" },
+    { question: "Operating systems made available in source-code format which has copyleft is called ______", options: ["BIOS", "Open-source OS", "Proprietary OS", "Free OS"], correct: "Open-source OS", module: "OS" },
+    { question: "In computer system organization, the I/O devices and the CPU both execute one at a time.", options: ["False", "True"], correct: "False", module: "OS" },
+    { question: "A portion of main memory is dedicated to OS", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "Parallel systems are also known as ______-coupled systems", options: ["Sweet", "Loosely", "Tightly", "Simply"], correct: "Tightly", module: "OS" },
+    { question: "A type of computing where one or more computers connect to a central computer to share or use resources", options: ["Client-server", "Cloud Computing", "Virtual Computing", "Peer-to-peer"], correct: "Client-server", module: "OS" },
+    { question: "Operating system is what type of software?", options: ["Program", "Utility", "System", "Application"], correct: "System", module: "OS" },
+    { question: "Also known as parallel-system or multicore.", options: ["Multiprocessor System", "Multi-Tasking", "Multi-Threading", "Multipurpose System"], correct: "Multiprocessor System", module: "OS" },
+    { question: "Cloud refers to servers that are accessed over the Internet", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "______ operation allows OS to protect itself and other system components.", options: ["Quadruple mode", "Zero mode", "Dual mode", "Single mode"], correct: "Dual mode", module: "OS" },
+    { question: "Operating System is built exclusively for a mobile device.", options: ["Server", "Floating", "Handheld", "Desktop"], correct: "Handheld", module: "OS" },
+    { question: "The user of a Batch Operating System has direct interaction with the computer.", options: ["True", "False"], correct: "False", module: "OS" },
+    { question: "It is a signal emitted by hardware or software when a process or an event needs immediate attention.", options: ["Buffer", "Disturb", "Link", "Interrupt"], correct: "Interrupt", module: "OS" },
+    { question: "Execute user programs and make solving user problems easier is one of the goals of OS.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "It is a technology that allows OS to run as applications within other operating system.", options: ["Distributed System", "Virtualization", "Operating System", "Clustered System"], correct: "Virtualization", module: "OS" },
+
+    // TRUE/FALSE QUESTIONS FROM FA2_OS.pdf
+    { question: "Process execution begins with a I/O burst that is followed by an CPU burst.", options: ["True", "False"], correct: "False", module: "OS" },
+    { question: "The process STACK contains the temporary data such as method/function parameters, return address and local variables.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "In process state, new state is when the process is being created", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "In process state, terminated state is when the process has finished execution.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "The processes in the system can execute concurrently; that is, many processes may be multitasked on a CPU.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "Restricting a child process to a subset of the parent's resources prevents any process from overloading the system by creating too many processes.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "A parent may terminate the execution of one of its children when the parent is exiting.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "A process may create several new processes, via a create-process system call, during the course of execution. The creating process is called child process.", options: ["False", "True"], correct: "False", module: "OS" },
+    { question: "In process state, running state is when the CPU is executing its instructions", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "In process state, ready state is when the process is waiting for some event to occur (such as an I/O completion).", options: ["False", "True"], correct: "False", module: "OS" },
+    { question: "Process control block is also known as task control block.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "The medium term scheduler selects process from among the processes that are ready to execute, and allocates the CPU to one of them.", options: ["True", "False"], correct: "False", module: "OS" },
+    { question: "Process execution begins with a CPU burst that is followed by an I/O burst.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "When a program is loaded into the memory and it becomes a process.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "The program counter indicates the address of the next instruction to be executed for this process.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "Created processes by the parent process are called children of that process.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "Operating system processes execute system code.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "A process is a passive entity.", options: ["True", "False"], correct: "False", module: "OS" },
+    { question: "The time from submission to completion of a process is called waiting time.", options: ["False", "True"], correct: "False", module: "OS" },
+    { question: "Each process is represented in the operating system by a process control block.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "A process is actually a cycle of CPU execution (CPU burst) and I/O wait (I/O burst).", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "In process, DATA section contains the global and static variables.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "In process, HEAP section contains the global and static variables.", options: ["True", "False"], correct: "False", module: "OS" },
+    { question: "In concurrent process, the creating process is the parent process.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "User processes execute user code.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "A process terminates when it finishes its first statement and asks the operating system to delete it using the exit system call.", options: ["False", "True"], correct: "False", module: "OS" },
+    { question: "Process is a program in execution.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "In process state, waiting state is when the process is waiting for the OS to assign a processor to it.", options: ["False", "True"], correct: "False", module: "OS" },
+    { question: "The goal of CPU scheduling is to optimize system performance is to maximize the throughput.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "In process state, running state is when the process is being created", options: ["False", "True"], correct: "False", module: "OS" },
+    { question: "A process terminates when it finishes its last statement and asks the operating system to delete it using the exit system call.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "The goal of CPU scheduling is to optimize system performance is to minimize the throughput.", options: ["True", "False"], correct: "False", module: "OS" },
+    { question: "A process is an active entity.", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "The time from submission to completion of a process is called response time.", options: ["False", "True"], correct: "False", module: "OS" },
+    { question: "In process state, waiting state is when the process is waiting for some event to occur (such as an I/O completion).", options: ["False", "True"], correct: "True", module: "OS" },
+    { question: "CPU being switched from one process to another is called Context Switch.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "A computer system consists of a collection of processes.", options: ["True", "False"], correct: "True", module: "OS" },
+
+    // CONCEPTUAL QUESTIONS FROM FA3_OS.pdf (no solving required)
+    { question: "A hardware device that performs the run-time mapping from logical to physical addresses", options: ["Page table", "Arithmetic logic unit", "Control unit", "Memory management unit"], correct: "Memory management unit", module: "OS" },
+    { question: "In dynamic partitions, which memory allocation scheme allots the largest free available block to the new job?", options: ["Next-fit", "Worst-fit", "Best-fit", "First-First-fit"], correct: "Worst-fit", module: "OS" },
+    { question: "Memory paging is a memory management technique for controlling how a computer or virtual machine's (VM's) memory resources are shared.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "The portion of the hard disk that acts as physical memory is called a page file", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "The address used to identify a memory location", options: ["physical address", "offset address", "Logical address", "IP address"], correct: "Logical address", module: "OS" },
+    { question: "In paging, the system also breaks a process into blocks called pages.", options: ["True", "False"], correct: "True", module: "OS" },
+    { question: "An address generated by the CPU.", options: ["IP address", "offset address", "physical address", "Logical address"], correct: "Logical address", module: "OS" },
+    { question: "It occurs when a partition is available but is too small for any waiting job.", options: ["External fragmentation", "dynamic loading", "Internal fragmentation", "swapping"], correct: "External fragmentation", module: "OS" },
+    { question: "It occurs when a process requiring m memory locations reside in a partition with n memory locations where m < n.", options: ["dynamic loading", "Internal fragmentation", "External fragmentation", "swapping"], correct: "Internal fragmentation", module: "OS" },
+    { question: "The size of a memory frame is NOT EQUAL to the size of a process page.", options: ["True", "False"], correct: "False", module: "OS" },
+    { question: "It refers to a collection of processes on the disk that are waiting to be brought into memory for execution.", options: ["job queue", "ready queue", "thread queue", "device queue"], correct: "job queue", module: "OS" }
+        ];
+
+        // --- APP STATE & LOGIC ---
+    const state = {
+        quizData: [],
+        currentIndex: 0,
+        answers: {},
+        score: 0,
+        started: false,
+        showResults: false
+    };
+
+    function shuffleArray(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    function startQuiz() {
+        console.log("Starting quiz...");
+        try {
+            state.quizData = shuffleArray([...RAW_QUESTIONS]).map(q => ({
+                ...q,
+                options: shuffleArray([...q.options])
+            }));
+            console.log("Quiz data prepared:", state.quizData.length, "questions");
+            
+            state.currentIndex = 0;
+            state.answers = {};
+            state.score = 0;
+            state.showResults = false;
+            state.started = true;
+            render();
+        } catch (error) {
+            console.error("Error starting quiz:", error);
+        }
+    }
+
+    function handleOptionSelect(option) {
+        try {
+            const currentQuestion = state.quizData[state.currentIndex];
+            const previousAnswer = state.answers[state.currentIndex];
+
+            state.answers[state.currentIndex] = option;
+
+            let scoreChange = 0;
+            if (previousAnswer === undefined) {
+                if (option === currentQuestion.correct) scoreChange = 1;
+            } else {
+                if (previousAnswer === currentQuestion.correct && option !== currentQuestion.correct) scoreChange = -1;
+                else if (previousAnswer !== currentQuestion.correct && option === currentQuestion.correct) scoreChange = 1;
+            }
+            state.score += scoreChange;
+            render();
+        } catch (error) {
+            console.error("Error selecting option:", error);
+        }
+    }
+
+    function goToQuestion(index) {
+        try {
+            if (index >= 0 && index < state.quizData.length) {
+                state.currentIndex = index;
+                render();
+            }
+        } catch (error) {
+            console.error("Error going to question:", error);
+        }
+    }
+
+    function finishQuiz() {
+        state.showResults = true;
+        render();
+    }
+
+    // --- RENDERING ---
+    function render() {
+        const app = document.getElementById('app');
+        if (!app) {
+            console.error("App element not found!");
+            return;
+        }
+        
+        app.innerHTML = '';
+
+        if (!state.started) {
+            renderStartScreen(app);
+            return;
+        }
+
+        // Check if we have quiz data
+        if (!state.quizData || state.quizData.length === 0) {
+            app.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full p-6 bg-gradient-to-br from-red-600 to-orange-700 text-white">
+                    <div class="bg-white/10 backdrop-blur-md p-8 rounded-3xl shadow-2xl text-center max-w-md w-full">
+                        <div class="mb-6 flex justify-center"><div class="p-4 bg-white/20 rounded-full"><i data-lucide="alert-triangle" class="w-12 h-12 text-white"></i></div></div>
+                        <h1 class="text-2xl font-bold mb-3">No Questions Loaded</h1>
+                        <p class="mb-6">There was an error loading the questions.</p>
+                        <button onclick="startQuiz()" class="w-full py-3 bg-white text-red-600 font-bold rounded-xl hover:bg-red-50 transition-all">Try Again</button>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = "flex flex-col h-full max-w-3xl mx-auto bg-white shadow-2xl md:my-8 md:rounded-2xl overflow-hidden relative";
+        
+        try {
+            renderHeader(container);
+            renderNavigation(container);
+            renderQuestionArea(container);
+            renderFooter(container);
+            
+            if (state.showResults) {
+                renderResultsOverlay(container);
+            }
+
+            app.appendChild(container);
+            lucide.createIcons();
+        } catch (error) {
+            console.error("Error rendering:", error);
+            app.innerHTML = `<div class="p-8 text-red-600">Error rendering quiz: ${error.message}</div>`;
+        }
+    }
+
+    function renderStartScreen(parent) {
+        parent.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full p-6 bg-gradient-to-br from-indigo-600 to-blue-700 text-white fade-in">
+                <div class="bg-white/10 backdrop-blur-md p-8 md:p-12 rounded-3xl shadow-2xl text-center max-w-lg w-full border border-white/20">
+                    <div class="mb-6 flex justify-center"><div class="p-4 bg-white/20 rounded-full"><i data-lucide="book-open" class="w-12 h-12 text-white"></i></div></div>
+                    <h1 class="text-3xl md:text-4xl font-bold mb-3 tracking-tight">Comprehensive Reviewer</h1>
+                    <p class="text-blue-100 mb-8 text-lg font-light">OS & InfoSec Formative Assessments</p>
+                    <div class="grid grid-cols-1 gap-3 mb-8 text-left">
+                        <div class="flex items-center bg-black/20 p-4 rounded-xl backdrop-blur-sm border border-white/10">
+                            <i data-lucide="check-circle" class="w-5 h-5 mr-3 text-green-400"></i>
+                            <div><span class="font-bold block">${RAW_QUESTIONS.length} Questions</span><span class="text-xs text-blue-200 opacity-80">Full question bank loaded</span></div>
+                        </div>
+                        <div class="flex items-center bg-black/20 p-4 rounded-xl backdrop-blur-sm border border-white/10">
+                            <i data-lucide="rotate-ccw" class="w-5 h-5 mr-3 text-yellow-400"></i>
+                            <div><span class="font-bold block">Smart Shuffle</span><span class="text-xs text-blue-200 opacity-80">Questions & options randomized</span></div>
+                        </div>
+                    </div>
+                    <button onclick="startQuiz()" class="w-full py-4 bg-white text-indigo-600 font-bold rounded-xl hover:bg-blue-50 transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1 text-lg">Start Review Session</button>
+                </div>
+            </div>
+        `;
+        lucide.createIcons();
+    }
+
+    function renderHeader(parent) {
+        const progress = Math.round(((state.currentIndex + 1) / state.quizData.length) * 100);
+        const header = document.createElement('div');
+        header.className = "bg-white border-b border-slate-200 p-4 md:px-8 shadow-sm z-10";
+        header.innerHTML = `
+            <div class="max-w-4xl mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div class="h-10 w-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 font-bold">${state.currentIndex + 1}</div>
+                    <div>
+                        <div class="text-xs uppercase text-slate-400 font-semibold tracking-wider mb-0.5">Progress</div>
+                        <div class="w-24 md:w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-indigo-500 transition-all duration-500 ease-out" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="text-right hidden md:block">
+                        <div class="text-xs uppercase text-slate-400 font-semibold tracking-wider mb-0.5">Score</div>
+                        <div class="text-xl font-bold text-slate-800"><span class="text-green-600">${state.score}</span><span class="text-slate-300 mx-1">/</span><span>${state.quizData.length}</span></div>
+                    </div>
+                    <button onclick="startQuiz()" class="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-indigo-600 transition-colors" title="Restart Quiz"><i data-lucide="rotate-ccw" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+        `;
+        parent.appendChild(header);
+    }
+
+    function renderNavigation(parent) {
+        const q = state.quizData[state.currentIndex];
+        const nav = document.createElement('div');
+        nav.className = "bg-slate-100 border-b border-slate-200 py-2 px-4 overflow-x-auto";
+        
+        let optionsHTML = state.quizData.map((q, idx) => {
+            const status = state.answers[idx] ? (state.answers[idx] === q.correct ? '✓' : '✗') : '';
+            // Safer text handling
+            const shortText = q.question.length > 30 ? 
+                q.question.substring(0, 30).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '...' : 
+                q.question.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return `<option value="${idx}" ${idx === state.currentIndex ? 'selected' : ''}>Q${idx + 1}: ${shortText} ${status}</option>`;
+        }).join('');
+
+        nav.innerHTML = `
+            <div class="max-w-4xl mx-auto flex gap-2">
+                <select onchange="goToQuestion(Number(this.value))" class="w-full md:w-auto bg-white border-none shadow-sm text-slate-600 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 py-2 pl-3 pr-8">
+                    ${optionsHTML}
+                </select>
+                <span class="hidden md:inline-flex items-center px-3 py-1 rounded-md text-xs font-medium border ${q.module === 'OS' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-purple-50 text-purple-700 border-purple-200'}">
+                    ${q.module === 'OS' ? 'Operating Systems' : 'Information Security'}
+                </span>
+            </div>
+        `;
+        parent.appendChild(nav);
+    }
+
+    function renderQuestionArea(parent) {
+        const q = state.quizData[state.currentIndex];
+        const currentAnswer = state.answers[state.currentIndex];
+        const hasAnswered = currentAnswer !== undefined;
+        const isCorrect = hasAnswered && currentAnswer === q.correct;
+
+        const container = document.createElement('div');
+        container.className = "flex-1 overflow-y-auto";
+        
+        let optionsHTML = q.options.map((opt, idx) => {
+            const isSelected = currentAnswer === opt;
+            const isCorrectOption = opt === q.correct;
+            
+            let btnClass = "w-full text-left p-5 rounded-xl border-2 transition-all duration-200 relative group option-btn ";
+            let iconHTML = "";
+
+            if (!hasAnswered) {
+                btnClass += "bg-white border-slate-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer shadow-sm";
+            } else {
+                if (isSelected) {
+                    if (isCorrectOption) {
+                        btnClass += "bg-green-100 border-green-500 text-green-800 font-semibold shadow-sm ring-2 ring-green-500 ring-offset-2";
+                    } else {
+                        btnClass += "bg-red-100 border-red-500 text-red-800 shadow-sm ring-2 ring-red-500 ring-offset-2";
+                    }
+                } else if (isCorrectOption) {
+                    btnClass += "bg-green-50 border-green-200 text-green-700 border-dashed";
+                } else {
+                    btnClass += "bg-slate-50 border-slate-200 opacity-60 hover:opacity-100 hover:bg-white cursor-pointer";
+                }
+
+                if (isSelected && isCorrectOption) iconHTML = `<i data-lucide="check-circle" class="w-6 h-6 text-green-600 flex-shrink-0 ml-4"></i>`;
+                else if (isSelected && !isCorrectOption) iconHTML = `<i data-lucide="x-circle" class="w-6 h-6 text-red-600 flex-shrink-0 ml-4"></i>`;
+                else if (isCorrectOption) iconHTML = `<i data-lucide="check-circle" class="w-6 h-6 text-green-600 flex-shrink-0 ml-4 opacity-50"></i>`;
+            }
+
+            const safeOpt = opt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            return `
+                <button onclick="handleOptionSelect('${safeOpt}')" class="${btnClass}">
+                    <div class="flex justify-between items-center relative z-10">
+                        <span class="text-base md:text-lg">${opt}</span>
+                        ${iconHTML}
+                    </div>
+                </button>
+            `;
+        }).join('');
+
+        let explanationHTML = "";
+        if (hasAnswered) {
+            explanationHTML = `
+                <div class="mt-6 p-5 rounded-xl border flex gap-4 fade-in ${isCorrect ? 'bg-green-50 border-green-100' : 'bg-indigo-50 border-indigo-100'}">
+                    <i data-lucide="${isCorrect ? 'check-circle' : 'alert-circle'}" class="w-6 h-6 ${isCorrect ? 'text-green-600' : 'text-indigo-600'} flex-shrink-0"></i>
+                    <div>
+                        <h4 class="font-bold mb-1 ${isCorrect ? 'text-green-800' : 'text-indigo-900'}">${isCorrect ? 'Correct!' : 'The correct answer is:'}</h4>
+                        <p class="${isCorrect ? 'text-green-700' : 'text-indigo-800 font-medium text-lg'}">${isCorrect ? 'Great job.' : q.correct}</p>
+                        ${q.note ? `<p class="mt-2 text-sm opacity-80 border-t border-black/5 pt-2">${q.note}</p>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = `
+            <div class="max-w-2xl mx-auto p-4 md:p-8 pb-24">
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 mb-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <span class="inline-block px-2 py-1 rounded text-[10px] font-bold tracking-wide uppercase ${q.module === 'OS' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}">${q.module}</span>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-medium text-slate-800 leading-relaxed">${q.question}</h3>
+                </div>
+                <div class="space-y-3">${optionsHTML}</div>
+                ${explanationHTML}
+            </div>
+        `;
+        parent.appendChild(container);
+    }
+
+    function renderFooter(parent) {
+        const footer = document.createElement('div');
+        footer.className = "bg-white border-t border-slate-200 p-4 md:px-8 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20";
+        
+        const isFirst = state.currentIndex === 0;
+        const isLast = state.currentIndex === state.quizData.length - 1;
+
+        footer.innerHTML = `
+            <div class="max-w-4xl mx-auto flex justify-between items-center gap-4">
+                <button onclick="goToQuestion(${state.currentIndex - 1})" ${isFirst ? 'disabled' : ''} class="flex items-center px-5 py-3 rounded-xl font-medium transition-all ${isFirst ? 'text-slate-300 cursor-not-allowed bg-slate-50' : 'text-slate-700 hover:bg-slate-100 active:scale-95 border border-slate-200'}">
+                    <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i> <span class="hidden md:inline">Previous</span>
+                </button>
+                <div class="text-center md:hidden"><span class="text-xs font-bold text-slate-400">${state.score} / ${state.quizData.length}</span></div>
+                ${isLast 
+                    ? `<button onclick="finishQuiz()" class="flex items-center px-8 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 active:scale-95 transition-all shadow-lg hover:shadow-green-200">Finish <i data-lucide="trophy" class="w-5 h-5 ml-2"></i></button>`
+                    : `<button onclick="goToQuestion(${state.currentIndex + 1})" class="flex items-center px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg hover:shadow-indigo-200">Next <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i></button>`
+                }
+            </div>
+        `;
+        parent.appendChild(footer);
+    }
+
+    function renderResultsOverlay(parent) {
+        const overlay = document.createElement('div');
+        overlay.className = "absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 fade-in";
+        const percent = Math.round((state.score / state.quizData.length) * 100);
+        
+        overlay.innerHTML = `
+            <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 text-center border border-white/20">
+                <div class="inline-flex p-4 bg-yellow-50 rounded-full mb-6"><i data-lucide="trophy" class="w-16 h-16 text-yellow-500"></i></div>
+                <h2 class="text-3xl font-bold text-slate-800 mb-2">Session Complete!</h2>
+                <div class="my-8">
+                    <div class="text-7xl font-black text-indigo-600 tracking-tighter">${percent}<span class="text-4xl align-top text-indigo-300">%</span></div>
+                    <p class="text-slate-500 mt-2 font-medium">You scored ${state.score} out of ${state.quizData.length}</p>
+                </div>
+                <div class="space-y-3">
+                    <button onclick="state.showResults=false; render()" class="w-full py-4 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors">Review Answers</button>
+                    <button onclick="startQuiz()" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1">Start New Session</button>
+                </div>
+            </div>
+        `;
+        parent.appendChild(overlay);
+    }
+
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("DOM loaded, initializing app...");
+        render();
+    });
+</script>
+</body>
+
+</html>
+
